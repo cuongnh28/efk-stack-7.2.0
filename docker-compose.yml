@@ -1,0 +1,73 @@
+version: "3"
+services:
+#  frontend:
+#    image: cuongnh28/frontend
+##    container_name: frontend
+#    ports:
+#      - "8081:8081"
+#    links:
+#      - fluentd
+#    depends_on:
+#      - backend
+#    logging:
+#      driver: "fluentd"
+#      options:
+#        fluentd-address: localhost:24224
+#        tag: frontend.access
+
+  backend:
+    image: cuongnh28/backend
+#    container_name: backend
+    ports:
+      - "8080:8080"
+    links:
+      - fluentd
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: backend.access
+
+  fluentd:
+    build: ./fluentd
+    container_name: fluentd
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+    links: # Sends incoming logs to the elasticsearch container.
+      - elasticsearch
+    depends_on:
+      - elasticsearch
+    ports: # Exposes the port 24224 on both TCP and UDP protocol for log aggregation
+      - 24224:24224
+      - 24224:24224/udp
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+    container_name: elasticsearch
+    expose:
+      - 9200
+    environment:
+      - discovery.type=single-node # Runs as a single-node
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=kibana_password
+    volumes:
+      - esdata:/usr/share/elasticsearch/data2
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.2.0
+    container_name: kibana
+    links: # Links kibana service to the elasticsearch container
+      - elasticsearch
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5601:5601
+    environment: # Defined host configuration
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=kibana_password
+
+# Define the Docker volume named esdata for the Elasticsearch container.
+volumes:
+  esdata:
