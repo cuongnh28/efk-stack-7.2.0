@@ -42,7 +42,7 @@ services:
       - 24224:24224/udp
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
     container_name: elasticsearch
     expose:
       - 9200
@@ -54,7 +54,7 @@ services:
       - esdata:/usr/share/elasticsearch/data2
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.2.0
+    image: docker.elastic.co/kibana/kibana:7.17.9
     container_name: kibana
     links: # Links kibana service to the elasticsearch container
       - elasticsearch
